@@ -1,6 +1,7 @@
 # MYOB Codding Challenge
 
 Create a console application, given employee details, output monthly payslip
+Tax calculation algorithm is in /MyobCodingChallenge.Payslip/MyobCodingChallenge.Payslip.Service/Services/TaxService.cs
 
 ## Getting Started
 
