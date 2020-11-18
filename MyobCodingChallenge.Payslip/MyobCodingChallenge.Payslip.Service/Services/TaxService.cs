@@ -9,10 +9,10 @@ namespace MyobCodingChallenge.Payslip.Service.Services
 {
     public class TaxService: ITaxService
     {
-        private readonly List<TaxBand> _taxBand;
+        private readonly List<TaxBand> _taxBands;
 
         public TaxService(IOptions<List<TaxBand>> options) => 
-            _taxBand = options.Value.OrderBy(band => band.LowerLimit).ToList();
+            _taxBands = options.Value.OrderBy(band => band.LowerLimit).ToList();
 
         public decimal GetMonthlyIncomeTax(decimal salary)
         {
@@ -24,24 +24,45 @@ namespace MyobCodingChallenge.Payslip.Service.Services
 
             return GetIncomeTax(salary)/12;
         }
-
         private decimal GetIncomeTax(decimal income)
         {
-            for(var i = 0; i < _taxBand.Count; i++)
+            var tax = 0M;
+
+            for (var i = 0; i < _taxBands.Count; i++)
             {
-                if(income > _taxBand[i].LowerLimit && income <= _taxBand[i].UpperLimit)
+                var taxBand = _taxBands[i];
+
+                // reach highest bracket for this income
+                if ((income > taxBand.LowerLimit && income <= taxBand.UpperLimit) || taxBand.UpperLimit == 0)
+                {
+                    tax += (income - taxBand.LowerLimit) * taxBand.Rate;
+                    break;
+                }
+
+                tax += (taxBand.UpperLimit - taxBand.LowerLimit) * taxBand.Rate;
+            }
+
+            return tax;
+        }
+
+        // another way to calculate tax, using recursion
+        private decimal GetIncomeTaxV2(decimal income)
+        {
+            for(var i = 0; i < _taxBands.Count; i++)
+            {
+                if(income > _taxBands[i].LowerLimit && income <= _taxBands[i].UpperLimit)
                     return CalculateIncomeTax(income, i);
             }
 
-            return CalculateIncomeTax(income, _taxBand.Count - 1);
+            return CalculateIncomeTax(income, _taxBands.Count - 1);
         }
 
         private decimal CalculateIncomeTax(decimal income, int taxBandIndex)
         {
-            if (taxBandIndex >= _taxBand.Count || income <= 0)
+            if (taxBandIndex >= _taxBands.Count || income <= 0)
                 return 0;
 
-            var taxBand = _taxBand[taxBandIndex];
+            var taxBand = _taxBands[taxBandIndex];
             var currentBandTax = (income - taxBand.LowerLimit) * taxBand.Rate;
 
             if (taxBandIndex == 0)
